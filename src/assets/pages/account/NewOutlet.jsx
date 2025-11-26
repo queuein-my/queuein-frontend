@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import useApiPrivate from "../../hooks/useApiPrivate";
 import Loading from "../../components/Loading";
 import useAuth from "../../hooks/useAuth";
-import AuthorizedUser from "./AuthorisedUser";
+import AuthorisedUser from "../../components/AuthorisedUser";
 import {
   primaryBgTransparentClass,
   primaryTextClass,
@@ -209,10 +209,10 @@ const NewOutlet = () => {
             >
               &times;
             </button>
-            <AuthorizedUser
+            <AuthorisedUser
               onSuccess={createAccountAllowed}
               onFailure={handleAuthFailure}
-              actionPurpose="Create New Outlet"
+              actionPurpose="OUTLET_CREATED"
               minimumRole="TIER_2"
               outletId={null}
             />

@@ -8,6 +8,7 @@ import {
   primaryButtonClass as buttonClass,
   checkBoxClass,
 } from "../styles/tailwind_styles";
+import LegalPoliciesModal from "../components/LegalPoliciesModal";
 
 const Register = () => {
   //States
@@ -33,7 +34,10 @@ const Register = () => {
   const [passwordSame, setPasswordSame] = useState(false);
   const [capslockOn, setCapslockOn] = useState(false);
   const [showBusinessType, setShowBusinessType] = useState(false);
-  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [privacyPolicyAccepted, setPrivacyPolicyAccepted] = useState(false);
+  const [privacyPolicyError, setPrivacyPolicyError] = useState(false);
+  const [privacyPolicyVersion, setPrivacyPolicyVersion] = useState(null);
+  const [showPoliciesModal, setShowPoliciesModal] = useState(false);
 
   const [loading, setLoading] = useState(false);
   //Use hooks imported
@@ -61,6 +65,11 @@ const Register = () => {
     }
   }, [passwordSame, companyPassword]);
 
+  const handleAcceptPolicies = (version) => {
+    setPrivacyPolicyAccepted(true);
+    setPrivacyPolicyVersion(version);
+    setShowPoliciesModal(false);
+  };
   const handleCheckCapsLock = (e) => {
     setCapslockOn(e.getModifierState("CapsLock"));
   };
@@ -78,6 +87,7 @@ const Register = () => {
     setOwnerNameErr("");
     setOwnerPasswordError("");
     setBusinessType("");
+    setPrivacyPolicyError("");
 
     if (companyEmail.length < 6) {
       setErrors({ general: "Email invalid" });
@@ -125,11 +135,12 @@ const Register = () => {
       setOwnerPasswordError(true);
       return;
     }
-    if (!agreeToTerms) {
+    if (!privacyPolicyAccepted) {
       setErrors({
         general:
           "You must agree to the Terms and Conditions and Privacy Policy.",
       });
+      setPrivacyPolicyError(true);
       return;
     }
 
@@ -138,6 +149,8 @@ const Register = () => {
       companyEmail: companyEmail,
       password: companyPassword,
       businessType: businessType,
+      privacyPolicyAccepted: privacyPolicyAccepted,
+      privacyPolicyVersion: privacyPolicyVersion,
     };
 
     if (
@@ -168,16 +181,13 @@ const Register = () => {
       });
       if (res.status === 201 && res.data?.accessToken && res.data?.accountId) {
         console.log("Response from registering: ", JSON.stringify(res.data));
-        const accessToken = res.data?.accessToken;
-        const accountId = res.data?.accountId;
-        const businessType = res.data?.businessType;
-        login(accessToken, accountId, businessType);
+        const data = {
+          accessToken: res.data?.accessToken,
+          accountId: res.data?.accountId,
+          businessType: res.data?.businessType,
+        };
+        login(data);
         setErrors({});
-
-        setTimeout(() => {
-          setLoading(false);
-          navigate(`/db/${res.data.accountId}/outlets/all`);
-        }, 2000);
       } else {
         console.error("Unexpected success response:", JSON.stringify(res.data));
         setErrors({
@@ -186,7 +196,6 @@ const Register = () => {
         });
       }
     } catch (err) {
-      setLoading(false);
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
       } else if (err.response?.data?.message) {
@@ -197,6 +206,8 @@ const Register = () => {
         });
       }
       console.error("Axios error: ", err.response?.data.errors);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -465,41 +476,42 @@ const Register = () => {
               </div>
             </div>
 
-            {errors && <p className={errorClass}>{errors.general}</p>}
-            <div className="flex items-center m-2">
+            <div
+              className={`flex items-start m-2 space-x-2 ${
+                privacyPolicyError ? "border-1 border-red-600" : ""
+              }`}
+            >
               <input
                 id="agree-terms-checkbox"
                 type="checkbox"
-                className={checkBoxClass}
-                onChange={() => setAgreeToTerms(!agreeToTerms)}
-                checked={agreeToTerms}
+                className={`${checkBoxClass} mt-1`}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setShowPoliciesModal(true);
+                  } else {
+                    setPrivacyPolicyAccepted(false);
+                  }
+                }}
+                checked={privacyPolicyAccepted}
                 required
               />
               <label
                 htmlFor="agree-terms-checkbox"
-                className="ms-2 text-xs font-light text-primary-dark-green"
+                className="text-xs font-light text-primary-dark-green"
               >
-                I agree to the{" "}
-                <a
-                  href="/legal-policies" // Adjust to the actual route or URL for displaying LegalPolicies(Alpha).md
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={linkClass}
+                I have read and agree to the{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowPoliciesModal(true)}
+                  className="text-primary-green underline hover:text-primary-dark-green"
                 >
-                  Terms and Conditions
-                </a>{" "}
-                and{" "}
-                <a
-                  href="/legal-policies" // Same as above; if separate, use different links
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={linkClass}
-                >
-                  Privacy Policy
-                </a>
+                  Terms and Conditions and Privacy Policy
+                </button>
                 .
               </label>
             </div>
+
+            {errors && <p className={errorClass}>{errors.general}</p>}
             <button type="submit" className={buttonClass}>
               Register
             </button>
@@ -516,6 +528,11 @@ const Register = () => {
       <div className="h-full hidden w-0 lg:flex md:w-2/5 justify-center items-center">
         <img src="/Q-logo.svg" alt="Queue In Logo" className="p-12" />
       </div>
+      <LegalPoliciesModal
+        isOpen={showPoliciesModal}
+        onClose={() => setShowPoliciesModal(false)}
+        onAccept={handleAcceptPolicies}
+      />
     </div>
   );
 };

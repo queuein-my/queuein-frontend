@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { apiPrivate } from "../../api/axios";
+import { apiPrivate } from "../api/axios";
 import {
   primaryBgTransparentClass,
   primaryTextClass,
-} from "../../styles/tailwind_styles";
-import { useBusinessType } from "../../hooks/useBusinessType";
+} from "../styles/tailwind_styles";
+import { useBusinessType } from "../hooks/useBusinessType";
 
 const QRCode = () => {
   const { accountId, outletId } = useParams();

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import UpdateOutletModal from "../../components/UpdateOutletModal";
 import useApiPrivate from "../../hooks/useApiPrivate";
-import AuthorisedUser from "./AuthorisedUser";
+import AuthorisedUser from "../../components/AuthorisedUser";
 import useAuth from "../../hooks/useAuth";
 import QRCode from "../../components/QRCodeButton";
 import { numericalSort } from "../../utils/sortList";
@@ -119,7 +119,7 @@ const AllOutlets = () => {
       }
     };
     fetchOutlets();
-  }, [accountId, refreshTrigger, isAuthenticated]);
+  }, [accountId, refreshTrigger, isAuthenticated, apiPrivate]);
 
   return (
     <div className="pt-15 md:pt-3">
@@ -137,7 +137,7 @@ const AllOutlets = () => {
             <AuthorisedUser
               onSuccess={deleteOutletAllowed}
               onFailure={handleAuthModalClose}
-              actionPurpose="Delete Outlet"
+              actionPurpose="OUTLET_DELETED"
               minimumRole="TIER_2"
               outletId={selectedOutletData.id}
             />

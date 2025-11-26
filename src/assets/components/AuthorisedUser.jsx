@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import useApiPrivate from "../../hooks/useApiPrivate";
+import useApiPrivate from "../hooks/useApiPrivate";
 import {
   primaryTextClass,
   primaryBgClass,
@@ -10,7 +10,7 @@ import {
   primaryInputClass,
   primaryBgTransparentClass,
   secondaryBgClass,
-} from "../../styles/tailwind_styles";
+} from "../styles/tailwind_styles";
 
 const AuthorizedUser = ({
   onSuccess,

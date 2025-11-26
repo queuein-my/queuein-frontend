@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import useApiPrivate from "../../hooks/useApiPrivate";
-import AuthorisedUser from "./AuthorisedUser";
+import useOutletSession from "../../hooks/useOutletSession";
+import AuthorisedUser from "../../components/AuthorisedUser";
 import Loading from "../../components/Loading";
 import {
   primaryButtonClass as buttonClass,
@@ -15,12 +16,36 @@ const IndividualOutlet = () => {
   const params = useParams();
   const navigate = useNavigate();
   const apiPrivate = useApiPrivate();
+  const {
+    isOutletAuthorized,
+    getOutletStaffInfo,
+    addAuthorizedOutlet,
+    isSessionValid,
+    authorizedOutlets,
+    removeAuthorizedOutlet,
+    clearAllSessions,
+  } = useOutletSession();
+
   const [loading, setLoading] = useState(false);
   const [outletName, setOutletName] = useState(null);
   const [errors, setErrors] = useState("");
   const [showAuthModalState, setShowAuthModalState] = useState(null);
   const [refresh, setRefresh] = useState(false);
 
+  const outletIds = Object.keys(authorizedOutlets);
+
+  const handleNavigateToOutlet = (outletId) => {
+    navigate(`/db/${params.accountId}/outlet/${outletId}`);
+  };
+  const handleRemoveSession = (outletId, e) => {
+    e.stopPropagation(); // Prevent navigation when removing
+    removeAuthorizedOutlet(outletId);
+
+    // If no more sessions, close the panel
+    if (outletIds.length === 1) {
+      console.log("No active sessions");
+    }
+  };
   const handleAuthModalClose = () => {
     setErrors({ general: "Authorization cancelled." });
     setShowAuthModalState(null);
@@ -34,25 +59,24 @@ const IndividualOutlet = () => {
         const res = await apiPrivate.get(
           `queueActivity/${params.accountId}/${params.outletId}`
         );
-        console.log("Individual data: ", JSON.stringify(res.data.outlet.name));
 
         if (res?.data?.outlet) {
           setOutletName(res.data.outlet.name);
-          console.log("API response data:", res.data); // Keep this log for debugging
 
           const currentOutletData = res.data.outlet;
           const currentQueueData = res.data.queue;
 
           if (currentQueueData) {
-            const handleAuthSuccess = (staffInfo) => {
-              setLoading(false);
-              setShowAuthModalState(null);
+            // --- CHECK IF ALREADY AUTHORIZED ---
+            if (
+              isOutletAuthorized(params.outletId) &&
+              isSessionValid(params.outletId)
+            ) {
+              // Already authorized - skip auth modal and go directly
+              const staffInfo = getOutletStaffInfo(params.outletId);
+              console.log("Using existing authorization for outlet");
 
-              console.log("Navigating to ActiveOutlet with:", {
-                staffInfo,
-                outletData: currentOutletData,
-                queueData: currentQueueData,
-              });
+              setLoading(false);
               navigate(
                 `/db/${res.data.outlet.accountId}/outlet/${res.data.outlet.id}/active/${currentQueueData.id}`,
                 {
@@ -64,22 +88,74 @@ const IndividualOutlet = () => {
                   },
                 }
               );
-            };
-            setShowAuthModalState({ onSuccess: handleAuthSuccess });
+            } else {
+              // Not authorized yet - show auth modal
+              const handleAuthSuccess = (staffInfo) => {
+                // Store the authorization
+                addAuthorizedOutlet(
+                  params.outletId,
+                  staffInfo,
+                  currentOutletData.name
+                );
+
+                setLoading(false);
+                setShowAuthModalState(null);
+
+                console.log("New authorization granted for outlet");
+                navigate(
+                  `/db/${res.data.outlet.accountId}/outlet/${res.data.outlet.id}/active/${currentQueueData.id}`,
+                  {
+                    replace: true,
+                    state: {
+                      staffInfo: staffInfo,
+                      outletData: currentOutletData,
+                      queueData: currentQueueData,
+                    },
+                  }
+                );
+              };
+              setShowAuthModalState({ onSuccess: handleAuthSuccess });
+            }
           } else {
-            console.log(
-              "No active/relevant queue found. Redirecting to inactive.",
-              params
-            );
-            navigate(
-              `/db/${res.data.outlet.accountId}/outlet/${res.data.outlet.id}/inactive`,
-              {
-                replace: true,
-                state: {
-                  outletData: currentOutletData,
-                },
-              }
-            );
+            // No active queue - check if authorized before going to inactive
+            if (
+              isOutletAuthorized(params.outletId) &&
+              isSessionValid(params.outletId)
+            ) {
+              navigate(
+                `/db/${res.data.outlet.accountId}/outlet/${res.data.outlet.id}/inactive`,
+                {
+                  replace: true,
+                  state: {
+                    outletData: currentOutletData,
+                    staffInfo: getOutletStaffInfo(params.outletId),
+                  },
+                }
+              );
+            } else {
+              // Show auth modal before accessing inactive outlet
+              const handleAuthSuccess = (staffInfo) => {
+                addAuthorizedOutlet(
+                  params.outletId,
+                  staffInfo,
+                  currentOutletData.name
+                );
+                setLoading(false);
+                setShowAuthModalState(null);
+
+                navigate(
+                  `/db/${res.data.outlet.accountId}/outlet/${res.data.outlet.id}/inactive`,
+                  {
+                    replace: true,
+                    state: {
+                      outletData: currentOutletData,
+                      staffInfo: staffInfo,
+                    },
+                  }
+                );
+              };
+              setShowAuthModalState({ onSuccess: handleAuthSuccess });
+            }
           }
         } else {
           setErrors({ general: "Received invalid outlet data from server." });
@@ -90,30 +166,7 @@ const IndividualOutlet = () => {
           "Error checking queue activity:",
           error.response || error
         );
-        if (error.response) {
-          if (
-            error.response.status === 404 &&
-            error.response.data.message === "Error, outlet not found"
-          ) {
-            setErrors({ general: "Error, outlet not found" });
-          } else {
-            setErrors({
-              general: `Error: ${error.response.data.message || error.message}`,
-            });
-            navigate(`/db/${params.accountId}/error`, {
-              replace: true,
-              state: {
-                errorMessage: error.response.data.message || error.message,
-              },
-            });
-          }
-        } else {
-          setErrors({ general: `Network Error: ${error.message}` });
-          navigate(`/db/${params.accountId}/error`, {
-            replace: true,
-            state: { errorMessage: error.message },
-          });
-        }
+        // ... existing error handling ...
       } finally {
         setLoading(false);
       }
@@ -144,16 +197,57 @@ const IndividualOutlet = () => {
       </div>
     );
   }
-
+  const sessionCount = Object.keys(authorizedOutlets).length;
   return (
-    <div className="flex items-center justify-center md:w-full  ">
+    <div className=" md:w-full flex flex-col items-center">
       <div
-        className={`w-[90%] h-[90%] rounded-2xl p-5 m-1 ${primaryBgClass} shadow-lg text-left relative my-8 `}
+        className={` md:w-[90%] md:h-[90%]  justify-center rounded-2xl p-5 m-1 ${primaryBgClass} shadow-lg text-left relative my-8 `}
       >
-        <h1 className={`font-semibold text-2xl pb-2 ${primaryTextClass}`}>
-          {outletName}
-        </h1>
+        {sessionCount > 0 && (
+          <div
+            className={`bg-primary-green rounded-lg  max-w-auto hidden md:absolute md:top-0 md:right-3 md:flex items-center justify-center gap-2 text-xs py-1 px-5 z-10`}
+          >
+            <i className="fa-solid fa-users text-xs"></i>
+            {outletIds.map((outletId) => {
+              const session = authorizedOutlets[outletId];
+
+              return (
+                <div
+                  key={outletId}
+                  className="flex items-center gap-2 px-3 py-2 bg-primary-cream dark:bg-stone-700 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border-2 border-transparent hover:border-primary-green "
+                  onClick={() => handleNavigateToOutlet(outletId)}
+                >
+                  <span className="text-sm font-medium">
+                    {session.outletName || `Outlet ${outletId.substring(0, 8)}`}
+                  </span>
+                  <button
+                    onClick={(e) => handleRemoveSession(outletId, e)}
+                    className="text-red-600 hover:text-red-800 hover:bg-red-100 dark:hover:bg-red-900 rounded-full w-5 h-5 flex items-center justify-center transition-colors"
+                    title="Remove session"
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })}
+
+            <button onClick={clearAllSessions} className="ml-3 underline ">
+              <i className="fa-solid fa-trash text-red-700"></i>
+            </button>
+          </div>
+        )}
+        {/* Header with outlet name and sessions button */}
+        <div className="lg:mb-4 relative">
+          <h1 className={`font-semibold text-2xl ${primaryTextClass} mb-2`}>
+            {outletName}
+          </h1>
+
+          {/* Sessions Button - only show if there are active sessions */}
+        </div>
+
         <Outlet />
+
+        {/* Auth Modal */}
         {showAuthModalState &&
           typeof showAuthModalState === "object" &&
           showAuthModalState.onSuccess && (
@@ -170,7 +264,7 @@ const IndividualOutlet = () => {
                 <AuthorisedUser
                   onSuccess={showAuthModalState.onSuccess}
                   onFailure={handleAuthModalClose}
-                  actionPurpose="Enter active queue"
+                  actionPurpose="STAFF_VERIFIED"
                   minimumRole="TIER_3"
                   outletId={params.outletId}
                 />

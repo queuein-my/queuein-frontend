@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import AuthorisedUser from "./AuthorisedUser";
+import AuthorisedUser from "../../components/AuthorisedUser";
 import NotificationModal from "../../components/NotificationModal";
 import useApiPrivate from "../../hooks/useApiPrivate";
 import useAuth from "../../hooks/useAuth";
@@ -762,7 +762,7 @@ const StaffManagement = () => {
               <AuthorisedUser
                 onSuccess={handleAuthSuccess}
                 onFailure={handleAuthModalClose}
-                actionPurpose="Create New Staff"
+                actionPurpose="STAFF_CREATED"
                 minimumRole="TIER_2"
               />
             )}
@@ -770,7 +770,7 @@ const StaffManagement = () => {
               <AuthorisedUser
                 onSuccess={handleAuthSuccess}
                 onFailure={handleAuthModalClose}
-                actionPurpose="Delete Staff"
+                actionPurpose="STAFF_DELETED"
                 minimumRole="TIER_2"
               />
             )}
@@ -778,7 +778,7 @@ const StaffManagement = () => {
               <AuthorisedUser
                 onSuccess={handleAuthSuccess}
                 onFailure={handleAuthModalClose}
-                actionPurpose="Update Staff"
+                actionPurpose="STAFF_UPDATED"
                 minimumRole="TIER_2"
               />
             )}

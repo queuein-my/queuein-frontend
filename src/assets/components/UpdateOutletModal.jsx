@@ -4,7 +4,7 @@ import { msToMins, minsToMs } from "../utils/timeConverter";
 import Loading from "./Loading";
 import QRCode from "./QRCodeButton";
 
-import AuthorisedUser from "../pages/account/AuthorisedUser";
+import AuthorisedUser from "./AuthorisedUser";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { useBusinessType } from "../hooks/useBusinessType";
@@ -452,7 +452,7 @@ const OutletUpdateModal = ({
                 <AuthorisedUser
                   onSuccess={updateOutletAllowed}
                   onFailure={handleAuthModalClose}
-                  actionPurpose="Update Outlet Data" // Changed actionPurpose for clarity
+                  actionPurpose="OUTLET_UPDATED"
                   minimumRole="TIER_2"
                   outletId={outletData.id}
                 />
@@ -714,7 +714,7 @@ const OutletUpdateModal = ({
               <AuthorisedUser
                 onSuccess={updateOutletAllowed}
                 onFailure={handleAuthModalClose}
-                actionPurpose="Update Outlet Data" // Changed actionPurpose for clarity
+                actionPurpose="OUTLET_UPDATED"
                 minimumRole="TIER_2"
                 outletId={outletData.id}
               />

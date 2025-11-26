@@ -2,6 +2,7 @@
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { AuthProvider } from "./assets/context/AuthContext.jsx";
+import { OutletSessionProvider } from "./assets/context/OutletSessionContext.jsx";
 import { SocketProvider } from "./assets/context/SocketContext.jsx";
 
 //Import Pages
@@ -44,7 +45,7 @@ const IndividualOutlet = lazy(() =>
 const StaffManagement = lazy(() =>
   import("./assets/pages/account/StaffManagement.jsx")
 );
-const QRCode = lazy(() => import("./assets/pages/account/QRCode.jsx"));
+const QRCode = lazy(() => import("./assets/components/QRCode.jsx"));
 const Customers = lazy(() => import("./assets/pages/account/Customers.jsx"));
 
 //Import Pages From Customer
@@ -232,20 +233,22 @@ const router = createBrowserRouter([
       {
         path: "/db",
         element: (
-          <AuthProvider>
-            <Suspense
-              fallback={
-                <Loading
-                  title={"App "}
-                  paragraph={
-                    "Sorry, it might take awhile for the app to wake up. "
-                  }
-                />
-              }
-            >
-              <Outlet />
-            </Suspense>
-          </AuthProvider>
+          <OutletSessionProvider>
+            <AuthProvider>
+              <Suspense
+                fallback={
+                  <Loading
+                    title={"App "}
+                    paragraph={
+                      "Sorry, it might take awhile for the app to wake up. "
+                    }
+                  />
+                }
+              >
+                <Outlet />
+              </Suspense>
+            </AuthProvider>
+          </OutletSessionProvider>
         ),
         children: [
           {

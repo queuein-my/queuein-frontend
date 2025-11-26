@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import moment from "moment";
-import AuthorisedUser from "./AuthorisedUser";
+import AuthorisedUser from "../../components/AuthorisedUser";
 import useApiPrivate from "../../hooks/useApiPrivate";
 import Loading from "../../components/Loading";
 import {
@@ -152,7 +152,7 @@ const InactiveOutlet = () => {
             <AuthorisedUser
               onSuccess={startQueueAllowed}
               onFailure={handleAuthModalClose}
-              actionPurpose="Start New Queue"
+              actionPurpose="QUEUE_CREATED"
               minimumRole="TIER_3"
               outletId={params.outletId}
             />

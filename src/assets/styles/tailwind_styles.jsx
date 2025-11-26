@@ -21,3 +21,5 @@ export const primaryBgTransparentClass = `bg-primary-cream/65 dark:bg-stone-700/
 export const errorTextClass = `text-red-900 dark:text-red-600`;
 export const xButtonClass =
   "absolute top-0 right-0 text-red-700 pr-5 pt-2 hover:text-red-950 transition ease-in active:text-red-950 font-bold";
+
+export const errorButtonClass = `bg-red-600 hover:bg-red-800 mt-3 w-full transition ease-in text-white font-light py-2 px-4 rounded focus:outline-none focus:shadow-outline text-center`;

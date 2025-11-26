@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 
 import { apiPrivate, interceptedApiPrivate } from "../../api/axios";
 import useAuth from "../../hooks/useAuth";
-import AuthorisedUser from "../../pages/account/AuthorisedUser";
+import AuthorisedUser from "../../components/AuthorisedUser";
 import Loading from "../../components/Loading";
 import { Outlet, useNavigate } from "react-router-dom";
 import { replaceEscaped } from "../../utils/replaceRegex";
@@ -271,7 +271,7 @@ const SettingsAccount = () => {
             <AuthorisedUser
               onSuccess={updateAccountAllowed}
               onFailure={handleAuthModalClose}
-              actionPurpose="Update Account Data" // Changed actionPurpose for clarity
+              actionPurpose="ACCOUNT_UPDATED"
               minimumRole="TIER_2"
               outletId={null}
             />
@@ -425,7 +425,7 @@ const SettingsAccount = () => {
                   id="businessType"
                   value={businessType}
                   onChange={(e) => setBusinessType(e.target.value)}
-                  className={`border-none px-2 py-1 ${primaryTextClass}`}
+                  className={`border-none px-2 py-1 ${primaryTextClass} ${primaryBgClass}`}
                 >
                   <option value="BASIC">Basic</option>
                   <option value="RESTAURANT">Restaurant</option>

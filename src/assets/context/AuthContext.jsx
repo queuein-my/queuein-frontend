@@ -69,9 +69,7 @@ export const AuthProvider = ({ children }) => {
       setAccountId(data.accountId);
       setAcctSlug(data.acctSlug);
       setIsAuthenticated(true);
-      setTimeout(() => {
-        navigate(`/db/${data.accountId}/outlets/all`);
-      }, 1500);
+      navigate(`/db/${data.accountId}/outlets/all`, { replace: true });
     },
     [navigate]
   );
@@ -145,7 +143,7 @@ export const AuthProvider = ({ children }) => {
   if (authLoading) {
     return (
       <Loading
-        title={"Loading your previous login... "}
+        title={"Previous login"}
         paragraph={"Please wait for the loading to end."}
       />
     );

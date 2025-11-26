@@ -12,7 +12,9 @@ const AuditLogs = ({ selectedId, outletName }) => {
     console.log("Sending outletId through component: ", selectedId);
     try {
       const res = await interceptedApiPrivate(
-        `/settings/auditLogs/${accountId}/${outletId}`
+        `/settings/auditLogs/${accountId}/${
+          outletId ? `?outletId=${outletId}` : ""
+        }`
       );
       if (res.status === 200) {
         console.log("Response from audit logs", res.data);
@@ -52,7 +54,7 @@ const AuditLogs = ({ selectedId, outletName }) => {
 
   return (
     <div className="">
-      <div className="flex flex-col items-center justify-center py-3">
+      <div className="flex flex-col items-center justify-center py-3 ">
         <h1 className="text-3xl font-extralight text-center ">Audit Logs</h1>
         <small className="text-center text-sm">{outletName}</small>
         <div
@@ -67,18 +69,17 @@ const AuditLogs = ({ selectedId, outletName }) => {
           </button>
         </div>
       </div>
-      {auditLogs.length > 0 && (
-        <div className="p-3 ">
-          {/* Table Headers for large screens */}
 
+      {auditLogs.length > 0 && (
+        <div className="p-3 overflow-y-auto max-h-[45vh] scroll-smooth border-1 border-primary-cream lg:p-5 lg:mb-5 lg:mt-3 ">
+          {/* Table Headers for large screens */}
           <div
-            className={`hidden lg:grid lg:grid-cols-3 font-bold ${primaryTextClass} mb-2 text-center`}
+            className={`hidden  lg:grid lg:grid-cols-3 font-bold ${primaryTextClass} mb-2 text-center`}
           >
             <div>Created On</div>
             <div>Action Type</div>
             <div>Done By</div>
           </div>
-
           {/* Audit Log entries */}
           {auditLogs.map((auditLog) => (
             <div
@@ -87,25 +88,34 @@ const AuditLogs = ({ selectedId, outletName }) => {
             >
               <div className="mb-1 lg:mb-1">
                 <p className="text-sm italic lg:hidden">Created On: </p>
-                <p className=" font-light text-gray-600 lg:text-center">
+                <p className=" font-light text-stone-700 lg:text-center">
                   {readableTime(auditLog.timestamp)}
                 </p>
               </div>
               <div className="mb-1 lg:mb-1 ">
                 <p className="text-sm italic lg:hidden">Action Type: </p>
-                <p className=" font-light text-gray-600 lg:text-center">
+                <p className=" font-light text-stone-700 lg:text-center">
                   {auditLog.actionType}
                 </p>
               </div>
 
               <div className="mb-1 lg:mb-1">
                 <p className="text-sm italic lg:hidden">Done By: </p>
-                <p className=" font-light text-gray-600 lg:text-center">
-                  {auditLog.staff.name}{" "}
-                  <small className="text-xs text-primary-green">
-                    {auditLog.staff.role.toLowerCase()}
-                  </small>
-                </p>
+                {auditLog.staff && (
+                  <p className=" font-light text-stone-700 lg:text-center">
+                    {auditLog.staff.name}{" "}
+                    <small className="text-xs text-primary-green">
+                      {auditLog.staff.role.toLowerCase()}
+                    </small>
+                  </p>
+                )}{" "}
+                {!auditLog.staff && (
+                  <div>
+                    <p className=" font-light text-stone-700 lg:text-center">
+                      System Automated
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           ))}
