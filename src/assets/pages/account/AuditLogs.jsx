@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { interceptedApiPrivate } from "../../api/axios";
+import api, { interceptedApiPrivate } from "../../api/axios";
 import { primaryBgClass, primaryTextClass } from "../../styles/tailwind_styles";
 
 const AuditLogs = ({ selectedId, outletName }) => {
@@ -16,6 +16,7 @@ const AuditLogs = ({ selectedId, outletName }) => {
           outletId ? `?outletId=${outletId}` : ""
         }`
       );
+
       if (res.status === 200) {
         console.log("Response from audit logs", res.data);
         setAuditLogs(res.data);
