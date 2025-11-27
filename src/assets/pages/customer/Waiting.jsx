@@ -500,29 +500,6 @@ const Waiting = () => {
 
   useEffect(() => {
     if (dataLoaded && queueItem !== null && !!socket && isConnected) {
-      const called = () => {
-        if (
-          "Notification" in window &&
-          Notification.permission === "granted" &&
-          !calledSoundPlayed
-        ) {
-          setThirdAlerted(false);
-          setSecondAlerted(false);
-          setFirstAlerted(false);
-
-          playSound("/AlertSound.mp3");
-          // const audio = new Audio("/AlertSound.mp3");
-          // audio
-          //   .play()
-          //   .catch((e) => console.error("Audio playback failed: ", e));
-          new Notification("It's Your Turn!", {
-            body: "Please approach.",
-            vibrate: [200, 100, 200, 100, 200],
-          });
-
-          setCalledSoundPlayed(true);
-        }
-      };
       const handleCalledUpdate = (data) => {
         console.log("Handling called update: ", data);
         console.log("Current queue item id: ", queueItem.id);
@@ -530,10 +507,32 @@ const Waiting = () => {
           const calledAt = moment(data.calledAt).format(
             "dddd, MMMM Do YYYY, h:mm:ss a"
           );
-          console.log("Are we calling?");
+          console.log("Patient is being called!");
           setCalledTimeElapsed(calledAt);
           setModalCalled(true);
-          called();
+
+          // Reset position alerts when called
+          setThirdAlerted(false);
+          setSecondAlerted(false);
+          setFirstAlerted(false);
+
+          // Play the alert sound using the queue system
+          if (!calledSoundPlayed) {
+            console.log("Playing alert sound for called patient");
+            playSound("/AlertSound.mp3");
+            setCalledSoundPlayed(true);
+          }
+
+          // Show notification if permission granted
+          if (
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            new Notification("It's Your Turn!", {
+              body: "Please approach.",
+              vibrate: [200, 100, 200, 100, 200],
+            });
+          }
         } else if (data.alert === false && data.action === "called") {
           setModalCalled(false);
           setCalledSoundPlayed(false); // Reset flag when modal closes
@@ -636,6 +635,8 @@ const Waiting = () => {
     customer?.id,
     socket,
     isConnected,
+    playSound,
+    calledSoundPlayed,
   ]);
 
   //* FUNCTIONS
